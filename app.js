@@ -1,10 +1,23 @@
 'use strict';
 
+const SCALE_VALUES = {
+  MAJOR: [2, 2, 1, 2, 2, 2, 1],
+  MINOR: [2, 1, 2, 2, 1, 2, 2],
+  MINOR_HARMONIC: [2, 1, 2, 2, 1, 3, 1],
+  MINOR_MELODIC: [2, 1, 2, 2, 2, 2, 1],
+  PENTATONIC_MAJOR: [2, 2, 3, 2, 3],
+  PENTATONIC_MINOR: [3, 2, 2, 3, 2],
+  BLUES: [3, 2, 1, 1, 3, 2],
+  NONE: [1, 1]
+};
+
 class App {
   constructor() {
     window.addEventListener('keydown', this.onKeyDown.bind(this));
     window.addEventListener('keyup', this.stop.bind(this));
     document.addEventListener('visibilitychange', this.stop.bind(this));
+
+    this.notes = this.getScaleNotes(SCALE_VALUES.MAJOR, 220, 26);
 
     this.currentSound = null;
   }
@@ -17,6 +30,26 @@ class App {
    */
   calcNote(base, interval) {
     return Math.round(base * Math.pow(2, interval / 12) * 100) / 100;
+  }
+
+  /**
+   * Returns an array of note in a scale
+   */
+  getScaleNotes(scale, base, max) {
+    let interval = 0,
+      note = null,
+      ni = 0,
+      notes = [];
+
+    for (let n = 0; n < max; n++) {
+      note = this.calcNote(base, interval);
+      interval = interval + scale[ni];
+      notes[n] = note;
+      ni++;
+      if (ni >= scale.length) ni = 0;
+    }
+
+    return notes;
   }
 
   onKeyDown(event) {
@@ -41,12 +74,11 @@ class App {
     this.stop();
 
     // Create new sound
-    var frequency = this.calcNote(220, noteNum);
     this.currentSound = new Pizzicato.Sound({
       source: 'wave',
       options: {
         type: 'sine',
-        frequency,
+        frequency: this.notes[noteNum],
         volume: 1,
         release: 1,
         attack: 0.75,
