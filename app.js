@@ -1,15 +1,15 @@
 'use strict';
 
-const SCALE_VALUES = {
-  MAJOR: [2, 2, 1, 2, 2, 2, 1],
-  MINOR: [2, 1, 2, 2, 1, 2, 2],
-  MINOR_HARMONIC: [2, 1, 2, 2, 1, 3, 1],
-  MINOR_MELODIC: [2, 1, 2, 2, 2, 2, 1],
-  PENTATONIC_MAJOR: [2, 2, 3, 2, 3],
-  PENTATONIC_MINOR: [3, 2, 2, 3, 2],
-  BLUES: [3, 2, 1, 1, 3, 2],
-  NONE: [1, 1]
-};
+const SCALES = [
+  [2, 2, 1, 2, 2, 2, 1], // Major
+  [2, 1, 2, 2, 1, 2, 2], // Minor
+  [2, 1, 2, 2, 1, 3, 1], // Minor harmonic
+  [2, 1, 2, 2, 2, 2, 1], // Minor melodic
+  [2, 2, 3, 2, 3], // Pentatonic major
+  [3, 2, 2, 3, 2], // Pentatonic minor
+  [3, 2, 1, 1, 3, 2], // Blues
+  [1, 1] // None
+];
 
 class App {
   constructor() {
@@ -17,9 +17,10 @@ class App {
     window.addEventListener('keyup', this.stop.bind(this));
     document.addEventListener('visibilitychange', this.stop.bind(this));
 
-    this.notes = this.getScaleNotes(SCALE_VALUES.MAJOR, 220, 26);
-
+    this.currentScaleIndex = 0;
     this.currentSound = null;
+
+    this.changeScale(0);
   }
 
   /**
@@ -52,10 +53,32 @@ class App {
     return notes;
   }
 
+  changeScale(scaleIndex) {
+    if (typeof scaleIndex === 'undefined') {
+      scaleIndex = this.currentScaleIndex + 1;
+    }
+
+    this.notes = this.getScaleNotes(SCALES[scaleIndex], 220, 26);
+    this.currentScaleIndex = scaleIndex;
+  }
+
   onKeyDown(event) {
     // If Esc key is press, stop sound
     if (event.key === 'Escape') {
       this.stop();
+      return;
+    }
+
+    // If Tab key is pressed, change scale
+    if (event.key === 'Tab') {
+      event.preventDefault();
+      this.changeScale();
+      return;
+    }
+
+    // If Backspace key is pressed, prevent default event (back)
+    if (event.key === 'Backspace') {
+      event.preventDefault();
       return;
     }
 
@@ -66,6 +89,9 @@ class App {
 
     // Else, play sound according to key pressed
     var noteNum = event.keyCode - 65;
+    if (noteNum > 14) {
+      noteNum = noteNum - 15;
+    }
     this.play(noteNum);
   }
 
