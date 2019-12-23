@@ -13,12 +13,12 @@ const SCALES = [
 
 class App {
   constructor() {
-    window.addEventListener('keydown', this.onKeyDown.bind(this));
-    window.addEventListener('keyup', this.stop.bind(this));
-    document.addEventListener('visibilitychange', this.stop.bind(this));
+    window.addEventListener('keypress', this.onKeyPress.bind(this));
+    window.addEventListener('keyup', this.onKeyUp.bind(this));
 
     this.currentScaleIndex = 0;
     this.currentSound = null;
+    this.playingSounds = [];
 
     this.changeScale(0);
   }
@@ -62,10 +62,24 @@ class App {
     this.currentScaleIndex = scaleIndex;
   }
 
-  onKeyDown(event) {
+  /**
+   * Converts a key (a-z) to a note num (0-16)
+   * @param {String} key 
+   * @return {Number}
+   */
+  keyToNoteNum(key) {
+    var noteNum = key.charCodeAt(0) - 97;
+    if (noteNum > 14) {
+      noteNum = noteNum - 15;
+    }
+
+    return noteNum;
+  }
+
+  onKeyPress(event) {
     // If Esc key is press, stop sound
     if (event.key === 'Escape') {
-      this.stop();
+      // this.stop();
       return;
     }
 
@@ -88,37 +102,43 @@ class App {
     }
 
     // Else, play sound according to key pressed
-    var noteNum = event.keyCode - 65;
-    if (noteNum > 14) {
-      noteNum = noteNum - 15;
-    }
+    var noteNum = this.keyToNoteNum(event.key);
     this.play(noteNum);
   }
 
   play(noteNum) {
-    // Stop current sound if any
-    this.stop();
+    // Ignore if note is already playing
+    if (this.playingSounds[noteNum]) {
+      return;
+    }
 
     // Create new sound
-    this.currentSound = new Pizzicato.Sound({
+    const sound = new Pizzicato.Sound({
       source: 'wave',
       options: {
         type: 'sine',
         frequency: this.notes[noteNum],
-        volume: 1,
-        release: 1,
-        attack: 0.75,
+        volume: 0.5,
+        release: 0.5,
+        attack: 0.1,
       },
     });
 
     // Play sound
-    this.currentSound.play();
+    sound.play();
+    this.playingSounds[noteNum] = sound;
   }
 
-  stop() {
-    if (this.currentSound) {
-      this.currentSound.stop();
-      this.currentSound = undefined;
+  onKeyUp(event) {
+    var noteNum = this.keyToNoteNum(event.key);
+    this.stop(noteNum);
+  }
+
+  stop(noteNum) {
+    var sound = this.playingSounds[noteNum];
+    if (sound) {
+      sound.stop();
+      this.playingSounds[noteNum] = undefined;
     }
   }
 }
