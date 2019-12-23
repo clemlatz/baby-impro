@@ -9,6 +9,16 @@ class App {
     this.currentSound = null;
   }
 
+  /**
+   * Calculate note frequency from base frequency and interval
+   * @param {Number} base Base frequency
+   * @param {Number} interval Distance of note from base frequency
+   * @return {Number} Calculated frequency of note
+   */
+  calcNote(base, interval) {
+    return Math.round(base * Math.pow(2, interval / 12) * 100) / 100;
+  }
+
   onKeyDown(event) {
     // If Esc key is press, stop sound
     if (event.key === 'Escape') {
@@ -21,22 +31,25 @@ class App {
       return;
     }
 
-    this.play();
+    // Else, play sound according to key pressed
+    var noteNum = event.keyCode - 65;
+    this.play(noteNum);
   }
 
-  play() {
+  play(noteNum) {
     // Stop current sound if any
     this.stop();
 
     // Create new sound
+    var frequency = this.calcNote(220, noteNum);
     this.currentSound = new Pizzicato.Sound({
       source: 'wave',
       options: {
         type: 'sine',
-        frequency: 440,
+        frequency,
         volume: 1,
-        release: 0.4,
-        attack: 0.4,
+        release: 1,
+        attack: 0.75,
       },
     });
 
@@ -47,6 +60,7 @@ class App {
   stop() {
     if (this.currentSound) {
       this.currentSound.stop();
+      this.currentSound = undefined;
     }
   }
 }
